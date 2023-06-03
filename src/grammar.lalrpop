@@ -5,14 +5,16 @@ grammar;
 
 pub Script: ir::Script<'input> = Block* Statement*;
 
-Identifier: ir::Identifier<'input> = r"[a-zA-Z]+[a-zA-Z0-9]*";
+Identifier: ir::Identifier<'input> = r"x[0-9]+";
+
+BlockIdentifier: ir::Identifier<'input> = r"b[0-9]+";
 
 Expression: ir::Expression = {
     r"-?[0-9]+" => ir::Expression::Integer(isize::from_str(<>).unwrap()),
 }
 
 Statement: ir::Statement<'input> = {
-    <p: Identifier> "->" <s: Identifier> <so: ("," Identifier)?> => ir::Statement::Successor(p, (s, so.map(|so| so.1))),
+    <p: BlockIdentifier> "->" <s: BlockIdentifier> <so: ("," BlockIdentifier)?> => ir::Statement::Successor(p, (s, so.map(|so| so.1))),
 }
 
 Instruction: ir::Instruction<'input> = {
@@ -20,10 +22,11 @@ Instruction: ir::Instruction<'input> = {
     "add" <t: Identifier> "," <l: Identifier> "," <r: Identifier> => ir::Instruction::Add { t, l, r },
     "le" <t: Identifier> "," <l: Identifier> "," <r: Identifier> => ir::Instruction::LessThanOrEqual { t, l, r },
     "tst" <t: Identifier> => ir::Instruction::Test(t),
-    "phi" <t: Identifier> "," <l: Identifier> "," <r: Identifier> => ir::Instruction::Phi { t, l, r },
-    "ret" <t: Identifier> => ir::Instruction::Return(t),
+    "phi" <t: Identifier> "," <l: Identifier> "," <r: Identifier> <v: ("," Identifier)*>
+        => ir::Instruction::Phi { t, v: [l, r].into_iter().chain(v.into_iter().map(|(_, i)| i)).collect() },
+    "ret" <t: Identifier+> => ir::Instruction::Return(t),
 }
 
 Block: ir::Block<'input> = {
-    <i: Identifier> "{" <s: Instruction*> "}" => ir::Block(i, s),
+    <i: BlockIdentifier> "{" <s: Instruction*> "}" => ir::Block(i, s),
 }

@@ -34,8 +34,7 @@ pub enum Instruction<'a> {
 	Test(Identifier<'a>),
 	Phi {
 		t: Identifier<'a>,
-		l: Identifier<'a>,
-		r: Identifier<'a>,
+		v: Vec<Identifier<'a>>,
 	},
-	Return(Identifier<'a>),
+	Return(Vec<Identifier<'a>>),
 }
